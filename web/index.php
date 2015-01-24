@@ -134,6 +134,25 @@ $parser->post('/stat', function()use($app, $config) {
 });
 
 
+
+$parser->get('/regex', function() use($app){
+	return file_get_contents('regex.html');
+});
+$parser->post('/regex', function() use($app, $config){
+	$links = array_map('trim', explode("\n", $_POST['links']));
+	$stream = function() use ($links){
+		foreach ($links as $link) {
+			if(preg_match($_POST['regex'], $link) === 1){
+				echo $link . "<br>";
+			}
+			ob_flush();
+			flush();
+		}
+	};
+	return $app->stream($stream);
+});
+
+
 $parser->get('/routes', function() use($app){
 	foreach ($app['routes'] as $route) {
 		echo $route->compile()->getTokens()[0][1] . '<br>';
