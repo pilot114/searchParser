@@ -1,0 +1,11 @@
+{
+	"require": {
+	  "silex/silex": "~1.2",
+	  "monolog/monolog": ">=1.0.0",
+	  "olamedia/nokogiri": "dev-master",
+	  "sleeping-owl/apist": "1.x"
+	},
+    "autoload": {
+        "psr-4": {"Plumcake\\": "src/Plumcake"}
+    }
+}

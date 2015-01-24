@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		body {
+			font-size: 16px;
+		}
+		#form {
+			display: inline;
+			float: left;
+  			width: 340px;
+		}
+		#result {
+			margin-left: 345px;
+		}
+	</style>
+	<script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+	<script>
+
+	function DumpObjectIndented(obj, indent)
+	{
+		var result = "";
+		indent = indent || "";
+		for (var property in obj){
+			var value = obj[property];
+			if (typeof value == 'string') {
+				value = "'" + value + "'";
+			} else if (typeof value == 'object') {
+
+				if (value instanceof Array) {
+					var arr = "";
+					value.forEach(function(name) {
+					    arr += indent + name + ",\n";
+					});
+					value = "[\n" + arr + "]";
+				} else {
+					var od = DumpObjectIndented(value, indent + "  ");
+					value = "\n" + indent + "{\n" + od + "\n" + indent + "}";
+				}
+			}
+			result += indent + "'" + property + "' : " + value + ",\n";
+		}
+		return result.replace(/,\n$/, "");
+	}
+
+	$( document ).ready(function() {
+		$('#send').click(function(e){
+
+			e.preventDefault();
+
+			var engines = $("input[name='engines[]']:checked").map(function(){
+		      return $(this).parent().text()
+		    }).get();
+
+			$.ajax({
+			    type: 'POST',
+			    dataType: "json",
+			    url: '/sp/work',
+			    data: {
+			    	'query':   $('#query').val(),
+			    	'engines': engines,
+			    	'after':   $("input[name='after']").is(":checked")
+			    },
+			    success: function(result) {
+			    	$('#result').empty();
+			    	$('#result').append(
+			    		'<pre>' + DumpObjectIndented(result, ' ') + '</pre>'
+			    		);
+			    }
+			});
+		});
+	});
+	</script>
+</head>
+<body>
+	<form method="POST" id="form">
+		<textarea id="query" cols="60" rows="30"></textarea><br>
+
+		<label><input type="checkbox" name="engines[]">google</label>
+		<label><input type="checkbox" name="engines[]">yandex</label>
+		<label><input type="checkbox" name="engines[]">mail</label>
+		<label><input type="checkbox" name="engines[]">bing</label>
+		<br>
+		<button id="send">Отправить</button>
+		<label><input type="checkbox" name="after">Отложенно</label>
+	</form>
+	<div id="result"></div>
+</body>
+</html>
