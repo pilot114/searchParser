@@ -7,7 +7,7 @@ require_once __DIR__.'/../vendor/autoload.php';
 $config = include('../config.php');
 
 $app = new Silex\Application();
-$app['debug'] = true;
+$app['debug'] = false;
 
 //$app->register(new Silex\Provider\MonologServiceProvider(), array(
 //    'monolog.logfile' => __DIR__.'/../logs/requests.log',
