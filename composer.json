@@ -3,7 +3,8 @@
 	  "silex/silex": "~1.2",
 	  "monolog/monolog": ">=1.0.0",
 	  "olamedia/nokogiri": "dev-master",
-	  "sleeping-owl/apist": "1.x"
+	  "sleeping-owl/apist": "1.x",
+	  "symfony/security": "~2.6"
 	},
     "autoload": {
         "psr-4": {"Plumcake\\": "src/Plumcake"}

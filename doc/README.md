@@ -26,3 +26,9 @@ TODO
 ### Обновление полей
 
 db.tasks.update({status:'old'}, {$set:{status:'new'}}, {multi:true})
+
+
+### cron
+
+Запуск worker.php раз в час
+dump.sh раз в день

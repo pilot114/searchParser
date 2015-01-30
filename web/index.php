@@ -9,10 +9,11 @@ $config = include('../config.php');
 $app = new Silex\Application();
 $app['debug'] = false;
 
-//$app->register(new Silex\Provider\MonologServiceProvider(), array(
-//    'monolog.logfile' => __DIR__.'/../logs/requests.log',
-//));
-
+$app->register(new Silex\Provider\MonologServiceProvider(), array(
+    'monolog.logfile' => __DIR__.'/../logs/requests.log',
+));
+$app->register(new Silex\Provider\SessionServiceProvider());
+$app->boot();
 
 /*
 		ROUTES
@@ -139,7 +140,14 @@ $parser->get('/regex', function() use($app){
 	return file_get_contents('regex.html');
 });
 $parser->post('/regex', function() use($app, $config){
-	$links = array_map('trim', explode("\n", $_POST['links']));
+
+	if(isset($_POST['db'])){
+		$m = new Monger($config);
+		list($links, $counters) = $m->getUniqs();
+		$links = array_keys($links);
+	} else {
+		$links = array_map('trim', explode("\n", $_POST['links']));
+	}
 	$stream = function() use ($links){
 		foreach ($links as $link) {
 			if(preg_match($_POST['regex'], $link) === 1){
@@ -160,5 +168,19 @@ $parser->get('/routes', function() use($app){
 	return false;
 });
 
+$parser->before(function() use ($app) {
+	if (!isset($_SERVER['PHP_AUTH_USER'])) {
+		header('WWW-Authenticate: Basic realm="test"');
+        return $app->json(array('Message' => 'Not Authorised'), 401);
+    } else {
+		$users = [
+			'admin' => 'VHY!YHV'
+		];
+		if($users[$_SERVER['PHP_AUTH_USER']] !== $_SERVER['PHP_AUTH_PW']) {
+			header('WWW-Authenticate: Basic realm="test"');
+			return $app->json(array('Message' => 'Not Authorised'), 401);
+		}
+	}
+});
 $app->mount('/sp', $parser);
 $app->run();
