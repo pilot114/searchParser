@@ -168,19 +168,19 @@ $parser->get('/routes', function() use($app){
 	return false;
 });
 
-//$parser->before(function() use ($app) {
-//	if (!isset($_SERVER['PHP_AUTH_USER'])) {
-//		header('WWW-Authenticate: Basic realm="test"');
-//        return $app->json(array('Message' => 'Not Authorised'), 401);
-//    } else {
-//		$users = [
-//			'admin' => 'VHY!YHV'
-//		];
-//		if($users[$_SERVER['PHP_AUTH_USER']] !== $_SERVER['PHP_AUTH_PW']) {
-//			header('WWW-Authenticate: Basic realm="test"');
-//			return $app->json(array('Message' => 'Not Authorised'), 401);
-//		}
-//	}
-//});
+$parser->before(function() use ($app) {
+	if (!isset($_SERVER['PHP_AUTH_USER'])) {
+		header('WWW-Authenticate: Basic realm="test"');
+        return $app->json(array('Message' => 'Not Authorised'), 401);
+    } else {
+		$users = [
+			'admin' => 'VHY!YHV'
+		];
+		if($users[$_SERVER['PHP_AUTH_USER']] !== $_SERVER['PHP_AUTH_PW']) {
+			header('WWW-Authenticate: Basic realm="test"');
+			return $app->json(array('Message' => 'Not Authorised'), 401);
+		}
+	}
+});
 $app->mount('/sp', $parser);
 $app->run();
