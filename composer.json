@@ -4,9 +4,11 @@
 	  "monolog/monolog": ">=1.0.0",
 	  "olamedia/nokogiri": "dev-master",
 	  "sleeping-owl/apist": "1.x",
-	  "symfony/security": "~2.6"
+	  "symfony/security": "~2.6",
+	  "phpunit/phpunit": "4.5.*",
+	  "ptrofimov/xpmock": "dev-master"
 	},
     "autoload": {
-        "psr-4": {"Plumcake\\": "src/Plumcake"}
+        "psr-4": {"Plumcake\\": "src/Plumcake/src"}
     }
 }
