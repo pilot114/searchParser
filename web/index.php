@@ -2,7 +2,7 @@
 
 use Plumcake\Mcurl;
 use Plumcake\Monger;
-use Plumcake\Searcher as Searcher;
+use Plumcake\Parsers\Searcher as Searcher;
 
 require_once __DIR__.'/../vendor/autoload.php';
 $config = include('../config.php');
@@ -52,7 +52,6 @@ $parser->post('/work', function() use ($app, $config) {
 		}
 		$search->initChannels($tasks);
 		$linkBatches = $search->now();
-		$search->closeChannels();
 		foreach ($linkBatches as $engine => $links) {
 			if (!empty($links)) {
 				$m->saveLinks($links, $engine);
@@ -129,7 +128,6 @@ $parser->post('/regex', function() use($app, $config){
 
 	if(isset($_POST['db'])){
 		$m = new Monger($config);
-		$counters = $m->getUniqCounters();
 		$links = $m->getUniqs();
 	} else {
 		$links = array_map('trim', explode("\n", $_POST['links']));
@@ -146,16 +144,26 @@ $parser->post('/regex', function() use($app, $config){
 	return $app->stream($stream);
 });
 
-$parser->get('/refs', function() use($app){
+$parser->get('/refs', function() use($app, $config){
+	$m = new Monger($config);
+	echo 'Бэклинков:' . $m->getBackinks()->count() . '<br>';
+	echo 'Уников:' . $m->getUniqs()->count() . '<br>';
+	echo 'Выборка происходит рандомно!<br>';
 	return file_get_contents('refs.html');
 });
 $parser->post('/refs', function() use($app, $config){
+	$col = $_POST['col'];
 	$refer = $_POST['refer'];
 	$count = $_POST['count'];
 
 	$m = new Monger($config);
+
 	// its mongo docs
-	$links   = $m->getRandUniq($count);
+	if($col == 'backlink'){
+		$links = $m->getRandBacklinks($count);
+	} else {
+		$links = $m->getRandUniq($count);
+	}
 	$proxies = $m->getRandomProxy($count);
 	foreach ($links as $i => $link) {
 		$links[$i] = $link['domain'];
@@ -226,6 +234,11 @@ $parser->get('/bl', function() use($app){
 	return file_get_contents('backlinks.html');
 });
 $parser->post('/bl', function() use($app, $config){
+	$dork = urlencode($_POST['dork']);
+	$m = new Monger($config);
+	$search = new Searcher($config, $m);
+	$search->after([$dork], ['google'], $type='backlink');
+	echo 'Задача добавлена!';
 	return false;
 });
 

@@ -161,6 +161,7 @@ class Monger
         foreach ($this->engines as $engine) {
             $task = $this->dbh->tasks->find(
                 [
+                    'type'   => 'common',
                     'status' => 'run',
                     $engine =>['$exists'=>true]
                 ])->sort([$engine => 1])
@@ -171,6 +172,13 @@ class Monger
         }
         return $tasks;
     }
+    public function findBacklinkTask()
+    {
+        return $this->dbh->tasks->findOne([
+            'type' => 'backlink'
+        ]);
+    }
+
     public function getUniqTasks()
     {
         $ops = [
@@ -190,13 +198,25 @@ class Monger
     }
 
     /*
-     *      DORKS
+     *      BACKLINKS
      * */
-    public function setDorkLinks($links)
+    public function saveBackinks($links)
     {
         $this->dbh->backlinks->batchInsert($links);
-        $this->debug->dork = count($links);
-        $this->debug->message = 'save dork links';
+        $this->debug->backlinks = count($links);
+        $this->debug->message = 'save backlinks';
+    }
+    public function getBackinks()
+    {
+        return $this->dbh->backlinks->find();
+    }
+    public function getRandBacklinks($count)
+    {
+        $max = $this->dbh->backlinks->count();
+        $rand = rand(0, $max-$count);
+        return $this->dbh->backlinks->find()
+            ->skip($rand)
+            ->limit($count);
     }
 
     /*

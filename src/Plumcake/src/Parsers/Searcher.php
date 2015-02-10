@@ -1,8 +1,10 @@
 <?php
 
-namespace Plumcake;
+namespace Plumcake\Parsers;
 
 use nokogiri;
+use Plumcake\Monger;
+use Plumcake\Mcurl;
 
 class Searcher
 {
@@ -106,7 +108,7 @@ class Searcher
 						'q'	=> $curQuery,
 						't' => new \MongoDate($this->initTime),
 						'sl' => $link['href'],
-						'l' => parse_url($link['href'])
+						'l' => parse_url($link['href'])['host']
 					];
 				} elseif( substr( $link['href'], 0, 7 ) === '/url?q=' ){
 					$query = parse_url($link['href'])['query'];
@@ -115,8 +117,8 @@ class Searcher
 					$this->links[$curEngName][] = [
 						'q' => $curQuery,
 						't' => new \MongoDate($this->initTime),
-						'sl' => $link['href'],
-						'l' => $args['q']
+						'sl' => $args['q'],
+						'l' => parse_url($args['q'])['host']
 					];
 				}
 			}
@@ -138,12 +140,13 @@ class Searcher
 		return $this->links;
 	}
 
-	public function after($queries, $engines)
+	public function after($queries, $engines, $type='common')
 	{
 		$tasks = [];
 		foreach ($queries as $query) {
 			foreach ($engines as $engine) {
 				$task['query'] = $query;
+				$task['type'] = $type;
 				$task['status'] = 'run';
 				$task[$engine] = 0;
 				$tasks[] = $task;
