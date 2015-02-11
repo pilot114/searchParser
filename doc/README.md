@@ -25,5 +25,5 @@ db.tasks.update({status:'old'}, {$set:{status:'new'}}, {multi:true})
 
 ### cron
 
-Запуск worker.php раз в час
+Запуск воркеров раз в час
 dump.sh раз в день

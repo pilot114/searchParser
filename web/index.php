@@ -109,13 +109,7 @@ $parser->get('/run', function() use ($app, $config) {
 
 $parser->get('/stat', function() use ($app, $config) {
 	$m = new Monger($config);
-	$counters = $m->getUniqCounters();
-	echo '<h2>По поисковикам (без учета пересечений)</h2>';
-	foreach ($counters as $engine => $counter) {
-		echo '<h3>' . $engine . ': ' . $counter . '</h3>';
-	}
 	echo '<h1>Уникальных доменов: ' . $m->getUniqs()->count() . '</h1>';
-
 	return false;
 });
 

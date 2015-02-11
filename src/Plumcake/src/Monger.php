@@ -66,8 +66,10 @@ class Monger
         ];
         $unicLinks = [];
         $engineCounters = [];
+        echo "Aggregate...\n";
         foreach ($this->engines as $engine) {
             $result = $this->dbh->$engine->aggregate($ops)['result'];
+            echo "* $engine complited. Count " . $result->count() . "\n";
             foreach($result as $link){
                 $url = $link['_id']['link'];
                 @$unicLinks[$url]++;
@@ -76,6 +78,8 @@ class Monger
                 }
             }
         }
+        echo "Aggregate finish. unics" . count($unicLinks) . "\n";
+        echo "Prepare uniqs,,.\n";
         $docUniqLinks = [];
         foreach ($unicLinks as $unicLink => $count) {
             $docUniqLinks[] = [
@@ -83,7 +87,9 @@ class Monger
                 'count' => $count
             ];
         }
+        echo "Save uniqs...\n";
         $this->dbh->uniq->batchInsert($docUniqLinks);
+        echo "Complete!\n";
     }
     public function getRandUniq($count)
     {
