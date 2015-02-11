@@ -1,7 +1,7 @@
 <?php
 
 return [
-	'debug' => true,
+	'debug' => false,
 	'connection' => 'mongodb://localhost/',
 	'db'	=> 'plumcake',
 	'users' => [
