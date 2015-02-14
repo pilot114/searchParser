@@ -4,6 +4,7 @@ namespace Plumcake;
 
 
 use MongoClient;
+use MongoDate;
 
 class Monger
 {
@@ -55,9 +56,21 @@ class Monger
     /*
      *      UNIQ
      * */
-    public function updateUniqs()
+    public function updateUniqs($start, $end)
     {
+        // format: 2010-01-15 00:00:00
+        $mStart = new MongoDate(strtotime($start));
+        $mEnd = new MongoDate(strtotime($end));
+
         $ops = [
+            [
+                '$match' => [
+                    't' => [
+                        '$gte' => $mStart,
+                        '$lte' => $mEnd
+                    ],
+                ],
+            ],
             [
                 '$group' => [
                     '_id' => ['link' => '$l'],
@@ -67,29 +80,33 @@ class Monger
         $unicLinks = [];
         $engineCounters = [];
         echo "Aggregate...\n";
-        foreach ($this->engines as $engine) {
-            $result = $this->dbh->$engine->aggregate($ops)['result'];
-            echo "* $engine complited. Count " . $result->count() . "\n";
-            foreach($result as $link){
-                $url = $link['_id']['link'];
-                @$unicLinks[$url]++;
-                if($unicLinks[$url] == 1){
-                    @$engineCounters[$engine]++;
-                }
-            }
-        }
-        echo "Aggregate finish. unics" . count($unicLinks) . "\n";
-        echo "Prepare uniqs,,.\n";
-        $docUniqLinks = [];
-        foreach ($unicLinks as $unicLink => $count) {
-            $docUniqLinks[] = [
-                'link'  => $unicLink,
-                'count' => $count
-            ];
-        }
-        echo "Save uniqs...\n";
-        $this->dbh->uniq->batchInsert($docUniqLinks);
-        echo "Complete!\n";
+        $result = $this->dbh->google->aggregate($ops)['result'];
+        print_r(count($result));
+        die();
+
+//        foreach ($this->engines as $engine) {
+//            $result = $this->dbh->$engine->aggregate($ops)['result'];
+//            echo "* $engine complited. Count " . $result->count() . "\n";
+//            foreach($result as $link){
+//                $url = $link['_id']['link'];
+//                @$unicLinks[$url]++;
+//                if($unicLinks[$url] == 1){
+//                    @$engineCounters[$engine]++;
+//                }
+//            }
+//        }
+//        echo "Aggregate finish. unics" . count($unicLinks) . "\n";
+//        echo "Prepare uniqs,,.\n";
+//        $docUniqLinks = [];
+//        foreach ($unicLinks as $unicLink => $count) {
+//            $docUniqLinks[] = [
+//                'link'  => $unicLink,
+//                'count' => $count
+//            ];
+//        }
+//        echo "Save uniqs...\n";
+//        $this->dbh->uniq->batchInsert($docUniqLinks);
+//        echo "Complete!\n";
     }
     public function getRandUniq($count)
     {
