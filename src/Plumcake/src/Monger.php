@@ -58,55 +58,47 @@ class Monger
      * */
     public function updateUniqs($start, $end)
     {
-        // format: 2010-01-15 00:00:00
-        $mStart = new MongoDate(strtotime($start));
-        $mEnd = new MongoDate(strtotime($end));
-
-        $ops = [
-            [
-                '$match' => [
-                    't' => [
-                        '$gte' => $mStart,
-                        '$lte' => $mEnd
-                    ],
-                ],
-            ],
-            [
-                '$group' => [
-                    '_id' => ['link' => '$l'],
-                ]
-            ]
-        ];
         $unicLinks = [];
         $engineCounters = [];
-        echo "Aggregate...\n";
-        $result = $this->dbh->google->aggregate($ops)['result'];
-        print_r(count($result));
-        die();
-
-//        foreach ($this->engines as $engine) {
-//            $result = $this->dbh->$engine->aggregate($ops)['result'];
-//            echo "* $engine complited. Count " . $result->count() . "\n";
-//            foreach($result as $link){
-//                $url = $link['_id']['link'];
-//                @$unicLinks[$url]++;
-//                if($unicLinks[$url] == 1){
-//                    @$engineCounters[$engine]++;
-//                }
-//            }
-//        }
-//        echo "Aggregate finish. unics" . count($unicLinks) . "\n";
-//        echo "Prepare uniqs,,.\n";
-//        $docUniqLinks = [];
-//        foreach ($unicLinks as $unicLink => $count) {
-//            $docUniqLinks[] = [
-//                'link'  => $unicLink,
-//                'count' => $count
-//            ];
-//        }
-//        echo "Save uniqs...\n";
-//        $this->dbh->uniq->batchInsert($docUniqLinks);
-//        echo "Complete!\n";
+        foreach ($this->engines as $engine) {
+            $result = $this->aggregateByDate($start, $end, $engine);
+            foreach($result as $link){
+                $url = $link['_id']['link'];
+                @$unicLinks[$url]++;
+                if($unicLinks[$url] == 1){
+                    @$engineCounters[$engine]++;
+                }
+            }
+        }
+        echo "Aggregates finish. common unics: " . count($unicLinks) . "\n";
+        echo "Prepare uniqs...\n";
+        $docUniqLinks = [];
+        foreach ($unicLinks as $unicLink => $count) {
+            $docUniqLinks[] = [
+                'link'  => $unicLink,
+                'count' => $count
+            ];
+        }
+        echo "Save uniqs...\n";
+        foreach ($docUniqLinks as $doc) {
+            $this->dbh->uniq->update(
+                [
+                    'link' => $doc['link']
+                ],
+                [
+                    '$set' => [
+                        'link' => $doc['link'],
+                    ],
+                    '$inc' => [
+                        'count' => $doc['count'],
+                    ]
+                ],
+                [
+                    'upsert' => true,
+                ]
+            );
+        }
+        echo "Complete!\n";
     }
     public function getRandUniq($count)
     {
@@ -245,6 +237,39 @@ class Monger
     /*
      *      OTHER
      * */
+    private function aggregateByDate($start, $end, $engine)
+    {
+        // format: 2010-01-15 00:00:00
+        $mStart = new MongoDate(strtotime($start));
+        $mEnd = new MongoDate(strtotime($end));
+
+        $ops = [
+            [
+                '$match' => [
+                    't' => [
+                        '$gte' => $mStart,
+                        '$lte' => $mEnd
+                    ],
+                ],
+            ],
+            [
+                '$group' => [
+                    '_id' => ['link' => '$l'],
+                ]
+            ]
+        ];
+        echo "$engine aggregate... ";
+        $result = $this->dbh->$engine->aggregate($ops)['result'];
+        echo count($result) . "\n";
+
+        $input = readline('Continue? (y/n): ');
+        if($input == 'n'){
+            echo "Bye.\n";
+            die();
+        }
+        return $result;
+    }
+
     public function saveLinks($links, $engine)
     {
         $this->dbh->$engine->batchInsert($links);
