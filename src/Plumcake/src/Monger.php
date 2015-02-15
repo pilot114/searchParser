@@ -248,7 +248,7 @@ class Monger
                 '$match' => [
                     't' => [
                         '$gte' => $mStart,
-                        '$lte' => $mEnd
+                        '$lt' => $mEnd
                     ],
                 ],
             ],
