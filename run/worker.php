@@ -7,6 +7,8 @@ require_once __DIR__.'/../vendor/autoload.php';
 $config = include(__DIR__.'/../config.php');
 
 $m = new Monger($config);
+$tasks = $m->findTasks();
+
 if (empty($tasks)) {
 	// TODO in debug
 	echo "Tasks not found\n"; die();
