@@ -7,14 +7,11 @@ require_once __DIR__.'/../vendor/autoload.php';
 $config = include(__DIR__.'/../config.php');
 
 $m = new Monger($config);
-$tasks = $m->findBacklinkTask();
+$task = $m->findBacklinkTask();
+$task['query'] = urldecode($task['query']);
 
-if (empty($tasks)) {
-	// TODO in debug
-	echo "Tasks not found\n"; die();
-}
 $search = new Searcher($config, $m);
-$search->initChannels(['google' => $tasks]);
+$search->initChannels(['google' => $task]);
 $linkBatches = $search->now();
 
 // there only google =)
