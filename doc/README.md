@@ -1,7 +1,7 @@
 ### Установка
 
 6XYvdHYkaDH4At
-php upuniq.php 2015-01-26:10 2015-01-26:15
+php upuniq.php 2015-02-13:10 2015-02-15:10
 
 Для работы требуется cron, php с curl, mongo и mongoClient.
 
