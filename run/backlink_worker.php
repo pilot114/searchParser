@@ -14,20 +14,20 @@ if (empty($tasks)) {
 	echo "Tasks not found\n"; die();
 }
 $search = new Searcher($config, $m);
-$search->initChannels($tasks);
+$search->initChannels(['google' => $tasks]);
 $linkBatches = $search->now();
 
 // there only google =)
 foreach ($linkBatches as $engine => $links) {
 	if (empty($links)) {
-		$m->updateTask($tasks[$engine], count($links), $status = 'pause');
+		$m->updateTask($tasks[$engine], 0, $status = 'pause');
 	} else {
-		$m->saveBackinks($links);
+		$m->saveBackinks($links, 'google');
 		list($min, $max) = $config['engines'][$engine]['full'];
 		if (count($links) >= $min && count($links) <= $max) {
 			$m->updateTask($tasks[$engine], count($links), $status = 'run');
 		} else {
-			$m->updateTask($tasks[$engine], 0, $status = 'stop');
+			$m->updateTask($tasks[$engine], count($links), $status = 'stop');
 		}
 	}
 }

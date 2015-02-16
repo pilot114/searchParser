@@ -228,7 +228,8 @@ $parser->get('/bl', function() use($app){
 	return file_get_contents('backlinks.html');
 });
 $parser->post('/bl', function() use($app, $config){
-	$dork = urlencode($_POST['dork']);
+	// not use urlencode!
+	$dork = $_POST['dork'];
 	$m = new Monger($config);
 	$search = new Searcher($config, $m);
 	$search->after([$dork], ['google'], $type='backlink');

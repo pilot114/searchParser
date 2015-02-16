@@ -14,7 +14,7 @@ return [
 			'page' => ['start', 1, true], // name, first index, shifting
 			'selector' => 'h3.r a',
 			'num' => 'num=100',
-			'full' => [99, 100] // min max for RUN status
+			'full' => [99, 105] // min max for RUN status
 		],
 		'yandex' => [
 			'url' => 'http://yandex.ru/yandsearch',
