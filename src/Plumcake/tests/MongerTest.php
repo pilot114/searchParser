@@ -54,6 +54,7 @@ class MongerTest extends PHPUnit_Framework_TestCase
             foreach ($this->monger->engines as $engine) {
                 $task['query'] = $query;
                 $task['status'] = 'run';
+                $task['type'] = 'common';
                 $task[$engine] = 0;
                 $tasks[] = $task;
                 unset($task);
@@ -61,7 +62,6 @@ class MongerTest extends PHPUnit_Framework_TestCase
         }
         $this->monger->addTasks($tasks);
         $tasks = $this->monger->findTasks();
-
         $trueCount = count($this->monger->engines);
         $this->assertEquals($trueCount, count($tasks));
 
@@ -113,9 +113,11 @@ class MongerTest extends PHPUnit_Framework_TestCase
 
     public function testUniq()
     {
+        $start = '2010-02-13 10:00:00';
+        $end   = '2030-02-13 10:00:00';
         $countLinks = 3;
         $this->setupLinks();
-        $this->monger->updateUniqs();
+        $this->monger->updateUniqs($start, $end);
         $counters = $this->monger->getUniqCounters();
         foreach ($counters as $counter) {
             $this->assertEquals($counter, $countLinks);

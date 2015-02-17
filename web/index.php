@@ -152,24 +152,31 @@ $parser->post('/refs', function() use($app, $config){
 
 	$m = new Monger($config);
 
-	// its mongo docs
+	// TODO
+	// to one format
+	// and non rand get
+	$links = [];
 	if($col == 'backlink'){
-		$links = $m->getRandBacklinks($count);
+		$cLinks = $m->getRandBacklinks($count);
+		foreach ($cLinks as $i => $link) {
+			$links[$i] = $link['l'];
+		}
 	} else {
-		$links = $m->getRandUniq($count);
+		$cLinks = $m->getRandUniq($count);
+		foreach ($cLinks as $i => $link) {
+			$links[$i] = $link['link'];
+		}
 	}
-	$proxies = $m->getRandomProxy($count);
-	foreach ($links as $i => $link) {
-		$links[$i] = $link['domain'];
-	}
-
+	$links = array_values($links);
+	$cProxies = $m->getRandomProxy($count);
+	$proxies = array_values(iterator_to_array($cProxies));
 
 	$optsTemplate = [
 		CURLOPT_REFERER           => $refer,
 		CURLOPT_RETURNTRANSFER    => 1,
 		CURLOPT_FOLLOWLOCATION    => 1,
 		CURLOPT_HEADER            => 1,
-		CURLOPT_CONNECTTIMEOUT    => 5,
+		CURLOPT_CONNECTTIMEOUT    => $config['proxy_timeout'],
 		CURLOPT_USERAGENT         => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
 	];
 	$opts = [];
@@ -177,19 +184,23 @@ $parser->post('/refs', function() use($app, $config){
 		$optsTemplate[CURLOPT_PROXY] = $proxy['proxy'];
 		$opts[] = $optsTemplate;
 	}
+
 	$mc = new Mcurl();
 	$chs = $mc->addChannels($links, $opts, $random=false);
 	$temp = [];
 	foreach ($chs as $i => $channel) {
-		$temp['channel'] = $channel;
-		$temp['proxy'] = $proxies[$i];
+		$temp[$i]['channel'] = $channel;
+		$temp[$i]['proxy'] = $proxies[$i]['proxy'];
+		$temp[$i]['_id'] = $proxies[$i]['_id'];
+		$temp[$i]['status'] = 0;
 	}
 
-	$mc->run(function($headers, $body, $chinfo, $chres) use (&$result, &$temp){
-		foreach ($temp as $i => $current) {
+	$mc->run(function($headers, $body, $chinfo, $chres) use (&$temp){
+//		TODO: wtf??
+//		echo 'call';
+		foreach ($temp as $i => &$current) {
 			if($current['channel'] == $chres){
 				$current['status'] = $chinfo['http_code'];
-				unset($temp[$i]['channel']);
 				break;
 			}
 		}

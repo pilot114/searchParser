@@ -1,7 +1,7 @@
 <?php
 
 use Plumcake\Monger;
-use Plumcake\Searcher;
+use Plumcake\Parsers\Searcher;
 
 class SearcherTest extends \PHPUnit_Framework_TestCase
 {

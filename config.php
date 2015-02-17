@@ -7,6 +7,7 @@ return [
 	'users' => [
 		'admin' => 'VHY!YHV',
 	],
+	'proxy_timeout' => 5,
 	'engines' => [
 		'google' => [
 			'url' => 'http://www.google.ru/search',

@@ -21,12 +21,8 @@ intitle:"Usage Statistics for" intitle:"Referrer"
 * выборка статистики по времени, график по ссылкам и уникам
 * workflow скрипты -> полная автоматизация
 
-### Обновление полей
-
-db.tasks.update({status:'old'}, {$set:{status:'new'}}, {multi:true})
-
-
 ### cron
 
-Запуск воркеров раз в час
-dump.sh раз в день
+* * * * * php /var/www/searchparser/run/backlink_worker.php
+* * * * * php /var/www/searchparser/run/worker.php
+* 1 * * * /var/www/searchparser/dump.sh

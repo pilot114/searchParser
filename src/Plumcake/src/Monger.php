@@ -45,7 +45,7 @@ class Monger
         foreach ($proxies as $proxy) {
             $direct = ($proxy['status'] == 200) ? 1:-1;
             $this->dbh->proxies->update(
-                ['_id' => $proxy['proxy']['_id']],
+                ['_id' => $proxy['_id']],
                 [
                     '$inc' => ['respect' => $direct]
                 ]
@@ -194,7 +194,8 @@ class Monger
     public function findBacklinkTask()
     {
         return $this->dbh->tasks->findOne([
-            'type' => 'backlink'
+            'type'   => 'backlink',
+            'status' => 'run'
         ]);
     }
 
