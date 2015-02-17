@@ -26,6 +26,6 @@ foreach ($linkBatches as $engine => $links) {
 		} else {
 			$m->updateTask($task, count($links), $status = 'stop');
 		}
+		$m->saveDebug();
 	}
 }
-$m->saveDebug();

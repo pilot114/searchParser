@@ -155,9 +155,10 @@ class Monger
             $this->dbh->tasks->update(
                 ['_id' => $task['_id']],
                 [
-                    $curEngine    => $task[$curEngine],
-                    'query'       => $task['query'],
-                    'status' 	  => 'pause'
+                    '$set' => [
+                        'query'  => $task['query'],
+                        'status' => 'pause'
+                    ]
                 ]
             );
         } else { // newStatus == stop
@@ -165,7 +166,10 @@ class Monger
                 ['_id' => $task['_id']],
                 [
                     '$inc' => [$curEngine => $count],
-                    '$set' => ['query' => $task['query'], 'status' => 'stop'],
+                    '$set' => [
+                        'query' => $task['query'],
+                        'status' => 'stop'
+                    ],
                 ]
             );
         }
