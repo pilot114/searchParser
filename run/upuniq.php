@@ -1,6 +1,6 @@
 <?php
 
-use Plumcake\Searcher as Searcher;
+use Plumcake\Parsers\Searcher as Searcher;
 use Plumcake\Monger as Monger;
 
 require_once __DIR__.'/../vendor/autoload.php';
@@ -14,4 +14,4 @@ $start = "$start:00:00";
 $end   = "$end:00:00";
 
 $m = new Monger($config);
-$m->updateUniqs($start, $end);
+$m->updateUniqs($start, $end, $debug=true);

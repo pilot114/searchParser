@@ -42,7 +42,7 @@ class McurlTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(count($chs), count($result));
         foreach ($result as $status) {
-            $this->assertTrue(in_array($status, [200, 403]));
+            $this->assertTrue(in_array($status, [200, 301, 403, 407]));
         }
     }
 }

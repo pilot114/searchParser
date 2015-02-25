@@ -139,75 +139,25 @@ $parser->post('/regex', function() use($app, $config){
 });
 
 $parser->get('/refs', function() use($app, $config){
-	$m = new Monger($config);
-	echo 'Бэклинков:' . $m->getBackinks()->count() . '<br>';
-	echo 'Уников:' . $m->getUniqs()->count() . '<br>';
-	echo 'Выборка происходит рандомно!<br>';
 	return file_get_contents('refs.html');
 });
 $parser->post('/refs', function() use($app, $config){
-	$col = $_POST['col'];
+
 	$refer = $_POST['refer'];
-	$count = $_POST['count'];
+	$limit = $_POST['limit'];
 
 	$m = new Monger($config);
 
-	// TODO
-	// to one format
-	// and non rand get
-	$links = [];
-	if($col == 'backlink'){
-		$cLinks = $m->getRandBacklinks($count);
-		foreach ($cLinks as $i => $link) {
-			$links[$i] = $link['l'];
-		}
-	} else {
-		$cLinks = $m->getRandUniq($count);
-		foreach ($cLinks as $i => $link) {
-			$links[$i] = $link['link'];
-		}
-	}
-	$links = array_values($links);
-	$cProxies = $m->getRandomProxy($count);
-	$proxies = array_values(iterator_to_array($cProxies));
+	$task = [];
+	$task['query'] = $refer;
+	$task['type'] = 'delivery';
+	$task['status'] = 'run';
+	$task['count'] = 0;
+	$task['limit'] = (int)$limit;
+	$tasks[] = $task;
 
-	$optsTemplate = [
-		CURLOPT_REFERER           => $refer,
-		CURLOPT_RETURNTRANSFER    => 1,
-		CURLOPT_FOLLOWLOCATION    => 1,
-		CURLOPT_HEADER            => 1,
-		CURLOPT_CONNECTTIMEOUT    => $config['proxy_timeout'],
-		CURLOPT_USERAGENT         => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
-	];
-	$opts = [];
-	foreach ($proxies as $proxy) {
-		$optsTemplate[CURLOPT_PROXY] = $proxy['proxy'];
-		$opts[] = $optsTemplate;
-	}
-
-	$mc = new Mcurl();
-	$chs = $mc->addChannels($links, $opts, $random=false);
-	$temp = [];
-	foreach ($chs as $i => $channel) {
-		$temp[$i]['channel'] = $channel;
-		$temp[$i]['proxy'] = $proxies[$i]['proxy'];
-		$temp[$i]['_id'] = $proxies[$i]['_id'];
-		$temp[$i]['status'] = 0;
-	}
-
-	$mc->run(function($headers, $body, $chinfo, $chres) use (&$temp){
-//		TODO: wtf??
-//		echo 'call';
-		foreach ($temp as $i => &$current) {
-			if($current['channel'] == $chres){
-				$current['status'] = $chinfo['http_code'];
-				break;
-			}
-		}
-	});
-	$mc->closeChannels();
-
-	$m->modifyProxies($temp);
+	$m->addTasks([$task]);
+	echo 'success!';
 	return false;
 });
 

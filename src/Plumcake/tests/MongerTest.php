@@ -101,7 +101,7 @@ class MongerTest extends PHPUnit_Framework_TestCase
 
         $generateDocs = [];
         foreach ($proxiesFromDb as $proxy) {
-            $doc = [];
+            $doc['_id'] = $proxy['_id'];
             $doc['proxy'] = $proxy;
             $doc['status'] = 200;
             $generateDocs[] = $doc;
@@ -117,7 +117,7 @@ class MongerTest extends PHPUnit_Framework_TestCase
         $end   = '2030-02-13 10:00:00';
         $countLinks = 3;
         $this->setupLinks();
-        $this->monger->updateUniqs($start, $end);
+        $this->monger->updateUniqs($start, $end, $debug=false);
         $counters = $this->monger->getUniqCounters();
         foreach ($counters as $counter) {
             $this->assertEquals($counter, $countLinks);

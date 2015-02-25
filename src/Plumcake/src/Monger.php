@@ -56,12 +56,12 @@ class Monger
     /*
      *      UNIQ
      * */
-    public function updateUniqs($start, $end)
+    public function updateUniqs($start, $end, $debug)
     {
         $unicLinks = [];
         $engineCounters = [];
         foreach ($this->engines as $engine) {
-            $result = $this->aggregateByDate($start, $end, $engine);
+            $result = $this->aggregateByDate($start, $end, $engine, $debug);
             foreach($result as $link){
                 $url = $link['_id']['link'];
                 @$unicLinks[$url]++;
@@ -70,8 +70,12 @@ class Monger
                 }
             }
         }
-        echo "Aggregates finish. common unics: " . count($unicLinks) . "\n";
-        echo "Prepare uniqs...\n";
+
+        if($debug){
+            echo "Aggregates finish. common unics: " . count($unicLinks) . "\n";
+            echo "Prepare uniqs...\n";
+        }
+
         $docUniqLinks = [];
         foreach ($unicLinks as $unicLink => $count) {
             $docUniqLinks[] = [
@@ -79,7 +83,11 @@ class Monger
                 'count' => $count
             ];
         }
-        echo "Save uniqs...\n";
+
+        if($debug){
+            echo "Save uniqs...\n";
+        }
+
         foreach ($docUniqLinks as $doc) {
             $this->dbh->uniq->update(
                 [
@@ -98,7 +106,9 @@ class Monger
                 ]
             );
         }
-        echo "Complete!\n";
+        if($debug){
+            echo "Complete!\n";
+        }
     }
     public function getRandUniq($count)
     {
@@ -135,6 +145,19 @@ class Monger
     public function addTasks($tasks)
     {
         $this->dbh->tasks->batchInsert($tasks);
+    }
+
+    public function updateDeliveryTask($task)
+    {
+        $this->dbh->tasks->update(
+            ['_id' => $task['_id']],
+            [
+                '$set' => [
+                    'status' => $task['status'],
+                    'count' => $task['count'],
+                ]
+            ]
+        );
     }
     public function updateTask($task, $count, $newStatus)
     {
@@ -240,9 +263,23 @@ class Monger
     }
 
     /*
+     *      DELIVERY
+     * */
+    public function findDeliveryTask()
+    {
+        return $this->dbh->tasks->find(
+            [
+                'type'   => 'delivery',
+                'status' => 'run',
+            ])->sort(['count' => 1])
+            ->getNext();
+    }
+
+
+    /*
      *      OTHER
      * */
-    private function aggregateByDate($start, $end, $engine)
+    private function aggregateByDate($start, $end, $engine, $debug)
     {
         // format: 2010-01-15 00:00:00
         $mStart = new MongoDate(strtotime($start));
@@ -263,14 +300,20 @@ class Monger
                 ]
             ]
         ];
-        echo "$engine aggregate... ";
-        $result = $this->dbh->$engine->aggregate($ops)['result'];
-        echo count($result) . "\n";
 
-        $input = readline('Continue? (y/n): ');
-        if($input == 'n'){
-            echo "Bye.\n";
-            die();
+        if($debug){
+            echo "$engine aggregate... ";
+        }
+
+        $result = $this->dbh->$engine->aggregate($ops)['result'];
+
+        if($debug){
+            echo count($result) . "\n";
+            $input = readline('Continue? (y/n): ');
+            if($input == 'n'){
+                echo "Bye.\n";
+                die();
+            }
         }
         return $result;
     }
