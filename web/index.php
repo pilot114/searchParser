@@ -143,21 +143,24 @@ $parser->get('/refs', function() use($app, $config){
 });
 $parser->post('/refs', function() use($app, $config){
 
-	$refer = $_POST['refer'];
+	$refers = array_map('trim', explode("\n", $_POST['refers']));
+	$refers = array_filter($refers); // remove empty string
+
 	$limit = $_POST['limit'];
 
 	$m = new Monger($config);
 
-	$task = [];
-	$task['query'] = $refer;
-	$task['type'] = 'delivery';
-	$task['status'] = 'run';
-	$task['count'] = 0;
-	$task['limit'] = (int)$limit;
-	$tasks[] = $task;
-
-	$m->addTasks([$task]);
-	echo 'success!';
+	$tasks = [];
+	foreach ($refers as $refer) {
+		$task['query'] = $refer;
+		$task['type'] = 'delivery';
+		$task['status'] = 'run';
+		$task['count'] = 0;
+		$task['limit'] = (int)$limit;
+		$tasks[] = $task;
+	}
+	$m->addTasks($tasks);
+	echo 'success added: ' . count($tasks);
 	return false;
 });
 

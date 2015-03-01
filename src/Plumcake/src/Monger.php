@@ -44,11 +44,23 @@ class Monger
     {
         foreach ($proxies as $proxy) {
             $direct = ($proxy['status'] == 200) ? 1:-1;
+
+            if($direct == 1){
+                $query = [
+                    '$set' => ['ft' => 0],
+                    '$inc' => ['respect' => $direct]
+                ];
+            } else {
+                $query = [
+                    '$inc' => [
+                        'respect' => $direct,
+                        'ft' => 1
+                    ]
+                ];
+            }
             $this->dbh->proxies->update(
                 ['_id' => $proxy['_id']],
-                [
-                    '$inc' => ['respect' => $direct]
-                ]
+                $query
             );
         }
     }
@@ -324,9 +336,14 @@ class Monger
         $this->debug->$engine = count($links);
         $this->debug->message = 'save links';
     }
-    // save all debug info in current life
-    public function saveDebug()
+    // save all debug info in current dbh life AND addInfo
+    public function saveDebug($addIndo = [])
     {
+        if(!empty($addIndo)){
+            foreach ($addIndo as $key => $massage) {
+                $this->debug->$key = $massage;
+            }
+        }
         $this->dbh->debug->insert($this->debug);
         unset($this->debug->_id);
         return $this->debug;
