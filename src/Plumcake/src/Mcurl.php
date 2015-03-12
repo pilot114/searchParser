@@ -6,6 +6,7 @@ class Mcurl
 {
     private $mh;
     private $chs = [];
+    private $stop = false;
 
     function __construct()
     {
@@ -49,7 +50,11 @@ class Mcurl
                 $cb($headers, $body, $chinfo, $mhinfo['handle']);
             }
             curl_multi_select($this->mh);
-        } while(($status === CURLM_CALL_MULTI_PERFORM || $running > 0));
+        } while(($status === CURLM_CALL_MULTI_PERFORM || $running > 0) && !$this->stop);
+    }
+
+    public function stop(){
+        $this->stop = true;
     }
 
     public function closeChannels()

@@ -174,6 +174,7 @@ $parser->post('/proxy', function() use($app, $config){
 		$proxies[$i] = [
 			'proxy'   => $proxy,
 			'respect' => 10,
+			'status'  => 'enable'
 		];
 	}
 	$m = new Monger($config);

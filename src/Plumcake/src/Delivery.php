@@ -40,23 +40,41 @@ class Delivery
         $this->opts    = $opts;
     }
 
-    public function run($cLinks)
+    public function run($cLinks, $limit = false)
     {
+        $startTime = microtime(true);
+
         $mc = new Mcurl();
         $chs = $mc->addChannels($cLinks, $this->opts, $random=false);
         $result = [];
         foreach ($chs as $i => $channel) {
             $result[$i]['channel'] = $channel;
             $result[$i]['proxy'] = $this->proxies[$i]['proxy'];
+            $result[$i]['hits'] = (isset($this->proxies[$i]['hits'])) ?: 0;
+            $result[$i]['avtime'] = (isset($this->proxies[$i]['avtime'])) ?: false;
+            $result[$i]['time'] = 999;
             $result[$i]['_id'] = $this->proxies[$i]['_id'];
             $result[$i]['status'] = 0;
         }
 
-        $mc->run(function($headers, $body, $chinfo, $chres) use (&$result){
+        $mc->run(function($headers, $body, $chinfo, $chres) use (&$result, &$suc, $mc, $startTime, $limit){
+
+            // all unfinished channel time = 999
+            if($limit){
+                if(intval(microtime(true) - $startTime) > $limit){
+                    $mc->stop();
+                }
+            }
             foreach ($result as $i => &$current) {
                 if($current['channel'] == $chres){
                     $current['status'] = $chinfo['http_code'];
-                    $current['url'] = $chinfo['url'];
+                    $current['url']    = $chinfo['url'];
+                    if(intval($chinfo['total_time'])){
+                        $current['time']   = intval($chinfo['total_time']);
+                    }
+                    if(!$current['avtime']){
+                        $current['avtime'] = $current['time'];
+                    }
                     break;
                 }
             }

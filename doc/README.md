@@ -1,7 +1,13 @@
 ### Установка
 
 6XYvdHYkaDH4At
-php upuniq.php 2015-02-25:12 2015-02-28:12
+php upuniq.php 2015-02-28:12 2015-03-12:12
+
+UA_NA131361
+I4mk70oITA
+
+kill all cron php tasks:
+kill $(ps aux | grep '[p]hp' | awk '{print $2}')
 
 check in console
 curl -LI URL
@@ -27,5 +33,5 @@ TODO
 
 * * * * * php /var/www/searchparser/run/backlink_worker.php
 * * * * * php /var/www/searchparser/run/worker.php
-*/5 * * * * php /var/www/searchparser/run/ref_delivery.php
+* * * * * php /var/www/searchparser/run/ref_delivery.php
 * 1 * * * /var/www/searchparser/dump.sh

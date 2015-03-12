@@ -1,6 +1,5 @@
 <?php
 
-use Plumcake\Mcurl;
 use Plumcake\Monger;
 use Plumcake\Delivery;
 
@@ -10,7 +9,7 @@ $m = new Monger($config);
 
 // delivery settings
 $col = 'uniqs';
-$count = 10;
+$count = 100;
 
 if ($col == 'uniqs') {
     $cLinks = $m->getRandUniq($count);
@@ -74,7 +73,7 @@ while($commonSuccess < $count){
 
     $curSuccess = 0;
     $delivery->prepareProxies($count);
-    $results = $delivery->run($cLinks);
+    $results = $delivery->run($cLinks, $limit = 30);
 
     foreach($results as $result){
         if($result['status'] == 200){
@@ -86,11 +85,13 @@ while($commonSuccess < $count){
     // up proxies
     $m->modifyProxies($results);
     $commonSuccess += $curSuccess;
-    echo $curSuccess;
+    echo $curSuccess . "\n";
 }
 $time_end = microtime(true);
 $debugAdded['time'] = new \MongoDate(time());
 $debugAdded['duration'] = intval($time_end - $time_start);
+
+echo 'TOTAL: ' . $debugAdded['duration'] . "\n";
 
 // up task
 $task['count'] += $commonSuccess;
