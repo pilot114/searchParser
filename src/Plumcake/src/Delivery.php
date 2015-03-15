@@ -51,15 +51,14 @@ class Delivery
             $result[$i]['channel'] = $channel;
             $result[$i]['proxy'] = $this->proxies[$i]['proxy'];
             $result[$i]['hits'] = (isset($this->proxies[$i]['hits'])) ?: 0;
-            $result[$i]['avtime'] = (isset($this->proxies[$i]['avtime'])) ?: false;
-            $result[$i]['time'] = 999;
+            $result[$i]['avtime'] = (isset($this->proxies[$i]['avtime'])) ?: 0;
             $result[$i]['_id'] = $this->proxies[$i]['_id'];
             $result[$i]['status'] = 0;
         }
 
         $mc->run(function($headers, $body, $chinfo, $chres) use (&$result, &$suc, $mc, $startTime, $limit){
 
-            // all unfinished channel time = 999
+            // stop delivery by time limit
             if($limit){
                 if(intval(microtime(true) - $startTime) > $limit){
                     $mc->stop();

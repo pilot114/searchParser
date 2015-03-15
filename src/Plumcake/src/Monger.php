@@ -5,6 +5,7 @@ namespace Plumcake;
 
 use MongoClient;
 use MongoDate;
+use MongoId;
 
 class Monger
 {
@@ -45,31 +46,42 @@ class Monger
         foreach ($proxies as $proxy) {
             $direct = ($proxy['status'] == 200) ? 1:-1;
 
-            $newAvTime = ($proxy['avtime']*$proxy['hits']+$proxy['time']) / ($proxy['hits']+1);
-
-            if($direct == 1){
+            // for proxy, exceeded limit
+            if(!isset($result['time'])){
                 $query = [
-                    '$set' => [
-                        'ft' => 0,
-                        'avtime' => $newAvTime
-                    ],
                     '$inc' => [
-                        'respect' => $direct,
-                        'hits' => 1,
-                    ]
-                ];
-            } else {
-                $query = [
-                    '$set' => [
-                        'avtime' => $newAvTime
-                    ],
-                    '$inc' => [
-                        'respect' => $direct,
                         'ft' => 1,
                         'hits' => 1,
                     ]
                 ];
+            } else {
+                $newAvTime = ($proxy['avtime']*$proxy['hits']+$proxy['time']) / ($proxy['hits']+1);
+                if($direct == 1){
+                    $query = [
+                        '$set' => [
+                            'ft' => 0,
+                            'avtime' => $newAvTime
+                        ],
+                        '$inc' => [
+                            'respect' => $direct,
+                            'hits' => 1,
+                        ]
+                    ];
+                } else {
+                    $query = [
+                        '$set' => [
+                            'avtime' => $newAvTime
+                        ],
+                        '$inc' => [
+                            'respect' => $direct,
+                            'ft' => 1,
+                            'hits' => 1,
+                        ]
+                    ];
+                }
             }
+
+            // execute
             $this->dbh->proxies->update(
                 ['_id' => $proxy['_id']],
                 $query
@@ -162,6 +174,13 @@ class Monger
     {
         return $this->dbh->uniq->find();
     }
+    public function removeUniqs($ids)
+    {
+        foreach ($ids as $id) {
+            $this->dbh->uniq->remove(['_id' => new MongoId($id)]);
+        }
+    }
+
 
     /*
      *      TASKS
