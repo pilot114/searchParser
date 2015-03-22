@@ -41,53 +41,6 @@ class Monger
         $rand = rand(0, $max-$limit);
         return $this->dbh->proxies->find()->skip($rand)->limit($limit);
     }
-    public function modifyProxies($proxies)
-    {
-        foreach ($proxies as $proxy) {
-            $direct = ($proxy['status'] == 200) ? 1:-1;
-
-            // for proxy, exceeded limit
-            if(!isset($result['time'])){
-                $query = [
-                    '$inc' => [
-                        'ft' => 1,
-                        'hits' => 1,
-                    ]
-                ];
-            } else {
-                $newAvTime = ($proxy['avtime']*$proxy['hits']+$proxy['time']) / ($proxy['hits']+1);
-                if($direct == 1){
-                    $query = [
-                        '$set' => [
-                            'ft' => 0,
-                            'avtime' => $newAvTime
-                        ],
-                        '$inc' => [
-                            'respect' => $direct,
-                            'hits' => 1,
-                        ]
-                    ];
-                } else {
-                    $query = [
-                        '$set' => [
-                            'avtime' => $newAvTime
-                        ],
-                        '$inc' => [
-                            'respect' => $direct,
-                            'ft' => 1,
-                            'hits' => 1,
-                        ]
-                    ];
-                }
-            }
-
-            // execute
-            $this->dbh->proxies->update(
-                ['_id' => $proxy['_id']],
-                $query
-            );
-        }
-    }
 
     /*
      *      UNIQ

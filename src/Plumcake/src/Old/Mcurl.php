@@ -38,10 +38,14 @@ class Mcurl
 
     public function run($cb)
     {
-        $running = 0;
+        $running = null;
         do {
             $status = curl_multi_exec($this->mh, $running);
+            if (curl_multi_select($this->mh) == -1) {
+                usleep(1);
+            }
             if ($mhinfo = curl_multi_info_read($this->mh)) {
+                echo $running;
                 $chinfo = curl_getinfo($mhinfo['handle']);
                 $output = curl_multi_getcontent($mhinfo['handle']);
                 $header_size = curl_getinfo($mhinfo['handle'], CURLINFO_HEADER_SIZE);
@@ -49,7 +53,6 @@ class Mcurl
                 $body = substr($output, $header_size);
                 $cb($headers, $body, $chinfo, $mhinfo['handle']);
             }
-            curl_multi_select($this->mh);
         } while(($status === CURLM_CALL_MULTI_PERFORM || $running > 0) && !$this->stop);
     }
 
