@@ -21,11 +21,6 @@ $m = new Monger($config);
 $col = 'uniqs';
 $countDelivery = 200;
 $options = ['timeout' => 30, 'pool' => 50];
-$headers = [
-    'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
-    'Referer'    => $task['query']
-];
-
 
 if ($col == 'uniqs') {
     $cLinks = $m->getRandUniq($countDelivery);
@@ -49,6 +44,10 @@ $cProxies = array_values(iterator_to_array($cProxies));
 $proxies = array_column($cProxies, 'proxy');
 
 // delivery
+$headers = [
+    'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
+    'Referer'    => $task['query']
+];
 $gw = new GuzzleWrapper($headers, $options);
 
 $gw->addRequests($cLinks, [], $proxies);
