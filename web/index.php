@@ -128,8 +128,8 @@ $parser->post('/regex', function() use($app, $config){
 	}
 	$stream = function() use ($links){
 		foreach ($links as $link) {
-			if(preg_match($_POST['regex'], $link) === 1){
-				echo $link . "<br>";
+			if(preg_match($_POST['regex'], $link['link']) === 1){
+				echo $link['link'] . "<br>";
 			}
 			ob_flush();
 			flush();
