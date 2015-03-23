@@ -10,7 +10,6 @@ $m = new Monger($config);
 $tasks = $m->findTasks();
 
 if (empty($tasks)) {
-	// TODO in debug
 	echo "Tasks not found\n"; die();
 }
 $search = new Searcher($config, $m);
@@ -18,7 +17,6 @@ $search->initChannels($tasks);
 $linkBatches = $search->now();
 
 foreach ($linkBatches as $engine => $links) {
-
 	if (empty($links)) {
 		$m->updateTask($tasks[$engine], 0, $status = 'pause');
 	} else {
@@ -29,6 +27,6 @@ foreach ($linkBatches as $engine => $links) {
 		} else {
 			$m->updateTask($tasks[$engine], count($links), $status = 'stop');
 		}
-		$m->saveDebug();
 	}
 }
+$m->saveDebug();

@@ -51,13 +51,13 @@ class GuzzleWrapper
         ]);
     }
 
-    // WARNING: count urls === count proxies
     public function addRequests(array $urls, array $headers = [], array $proxies = [])
     {
+        $countProxies = count($proxies);
         foreach ($urls as $index => $url) {
-            if(!empty($proxies)){
+            if($countProxies){
                 $request = $this->client->createRequest('GET', $url, [
-                    'proxy' => $proxies[$index]
+                    'proxy' => $proxies[$index%$countProxies]
                 ]);
             } else {
                 $request = $this->client->createRequest('GET', $url);

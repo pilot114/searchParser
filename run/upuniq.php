@@ -1,6 +1,5 @@
 <?php
 
-use Plumcake\Parsers\Searcher as Searcher;
 use Plumcake\Monger as Monger;
 
 require_once __DIR__.'/../vendor/autoload.php';

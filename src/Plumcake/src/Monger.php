@@ -44,6 +44,7 @@ class Monger
 
     /*
      *      UNIQ
+     *
      * */
     public function updateUniqs($start, $end, $debug)
     {
@@ -137,24 +138,15 @@ class Monger
 
     /*
      *      TASKS
+     *
+     * 4 types: Common, Delivery, Backlink
+     *
      * */
     public function addTasks($tasks)
     {
         $this->dbh->tasks->batchInsert($tasks);
     }
 
-    public function updateDeliveryTask($task)
-    {
-        $this->dbh->tasks->update(
-            ['_id' => $task['_id']],
-            [
-                '$set' => [
-                    'status' => $task['status'],
-                    'count' => $task['count'],
-                ]
-            ]
-        );
-    }
     public function updateTask($task, $count, $newStatus)
     {
         foreach ($this->engines as $engine) {
@@ -210,14 +202,7 @@ class Monger
         }
         return $tasks;
     }
-    public function findBacklinkTask()
-    {
-        return $this->dbh->tasks->findOne([
-            'type'   => 'backlink',
-            'status' => 'run'
-        ]);
-    }
-
+    // for exclude tasks in formatter
     public function getUniqTasks()
     {
         $ops = [
@@ -234,6 +219,36 @@ class Monger
             @$unicLinks[$url]++;
         }
         return array_keys($unicLinks);
+    }
+
+    public function updateDeliveryTask($task)
+    {
+        $this->dbh->tasks->update(
+            ['_id' => $task['_id']],
+            [
+                '$set' => [
+                    'status' => $task['status'],
+                    'count' => $task['count'],
+                ]
+            ]
+        );
+    }
+    public function findDeliveryTask()
+    {
+        return $this->dbh->tasks->find(
+            [
+                'type'   => 'delivery',
+                'status' => 'run',
+            ])->sort(['count' => 1])
+            ->getNext();
+    }
+
+    public function findBacklinkTask()
+    {
+        return $this->dbh->tasks->findOne([
+            'type'   => 'backlink',
+            'status' => 'run'
+        ]);
     }
 
     /*
@@ -257,20 +272,6 @@ class Monger
             ->skip($rand)
             ->limit($count);
     }
-
-    /*
-     *      DELIVERY
-     * */
-    public function findDeliveryTask()
-    {
-        return $this->dbh->tasks->find(
-            [
-                'type'   => 'delivery',
-                'status' => 'run',
-            ])->sort(['count' => 1])
-            ->getNext();
-    }
-
 
     /*
      *      OTHER
@@ -321,17 +322,18 @@ class Monger
         $this->debug->message = 'save links';
     }
     // save all debug info in current dbh life AND addInfo
-    public function saveDebug($addIndo = [])
+    public function saveDebug($addInfo = [])
     {
-        if(!empty($addIndo)){
-            foreach ($addIndo as $key => $massage) {
-                $this->debug->$key = $massage;
+        if(!empty($addInfo)){
+            foreach ($addInfo as $key => $message) {
+                $this->debug->$key = $message;
             }
         }
         $this->dbh->debug->insert($this->debug);
         unset($this->debug->_id);
         return $this->debug;
     }
+    // for tests
     public function dropCurDb()
     {
         return $this->dbh->drop();

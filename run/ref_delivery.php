@@ -20,7 +20,7 @@ $m = new Monger($config);
 // delivery settings
 $col = 'uniqs';
 $countDelivery = 200;
-$options = ['timeout' => 30, 'pool' => 50];
+$options = ['timeout' => 40, 'pool' => 50];
 
 if ($col == 'uniqs') {
     $cLinks = $m->getRandUniq($countDelivery);

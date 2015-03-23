@@ -8,6 +8,9 @@ $config = include(__DIR__.'/../config.php');
 
 $m = new Monger($config);
 $task = $m->findBacklinkTask();
+if (!$task) {
+	echo "Tasks not found\n"; die();
+}
 $task['query'] = urldecode($task['query']);
 
 $search = new Searcher($config, $m);

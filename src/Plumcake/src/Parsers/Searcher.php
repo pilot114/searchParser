@@ -4,22 +4,27 @@ namespace Plumcake\Parsers;
 
 use nokogiri;
 use Plumcake\Monger;
-use Plumcake\Mcurl;
+use Plumcake\GuzzleWrapper;
 
 class Searcher
 {
 	private $monger;
 	private $conf;
-	private $initTime;
 	private $links;
-	private $mcurl;
-	private $channels = [];
+	private $gw;
+	private $info = [];
 
 	function __construct($config, Monger $monger)
 	{
 		$this->conf   = $config;
 		$this->monger = $monger;
-		$this->mcurl = new Mcurl();
+
+		$options  = ['timeout' => 10, 'pool' => 4];
+		$headers = [
+			'Referer'    => 'https://www.google.ru',
+			'User-Agent' => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
+		];
+		$this->gw = new GuzzleWrapper($headers, $options);
 	}
 
 	private function shiftesDenormalize($engine, $shift)
@@ -41,17 +46,6 @@ class Searcher
 			}
 		}
 
-		$opt = [
-			CURLOPT_REFERER 		=> 'https://www.google.ru',
-			CURLOPT_RETURNTRANSFER	=> 1,
-			CURLOPT_FOLLOWLOCATION	=> true,
-			CURLOPT_VERBOSE			=> 0,
-			CURLOPT_HEADER			=> 1,
-			CURLOPT_CONNECTTIMEOUT	=> 10,
-			CURLOPT_USERAGENT		=>
-				"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
-		];
-
 		$urls = [];
 		foreach ($tasks as $engineName => $task) {
 			$engine = $this->conf['engines'][$engineName];
@@ -62,38 +56,33 @@ class Searcher
 			if(isset($engine['num'])){
 				$searchUrl.= '&' . $engine['num'];
 			}
-			$this->channels[] = [
-				'engine'  => $engineName,
+			$this->info[$engineName] = [
 				'query'   => $task['query'],
 				'shift'   => $task[$engineName]
 			];
 			$urls[] = $searchUrl;
 		}
-		$chs = $this->mcurl->addChannels($urls, [$opt], $random=false);
-		foreach ($this->channels as $i => $channel) {
-			$this->channels[$i]['channel'] = $chs[$i];
-		}
+		$this->gw->addRequests($urls);
 	}
 
 	// return links group by engines
 	public function now()
 	{
-		$errorStack = [];
-		$result = [];
-		$this->initTime = time();
-		$this->mcurl->run(function($headers, $body, $chinfo, $chres) use (&$result){
+		$result = $this->gw->run();
 
-			// detect current curl channel
-			$curChannel = [];
-			foreach ($this->channels as $channel) {
-				if($channel['channel'] === $chres){
-					$curChannel = $channel;
+		foreach ($result['complete'] as $complete) {
+
+			// detect engine
+			$url = $complete->getRequest()->getUrl();
+			foreach ($this->conf['engines'] as $name => $c) {
+				if(strpos($url, $name) !== false){
+					$curEngName = $name;
+					$curInfo = $this->info[$curEngName];
 				}
 			}
-			$curEngName = $curChannel['engine'];
-			$curQuery   = trim($curChannel['query']);
 
 			// parse
+			$body = (string)$complete->getResponse()->getBody();
 			$saw = new nokogiri($body);
 			foreach ($saw->get($this->conf['engines'][$curEngName]['selector']) as $link) {
 
@@ -105,8 +94,7 @@ class Searcher
 					strpos($link['href'], 'my.mail.ru') === false
 				){
 					$this->links[$curEngName][] = [
-						'q'	=> $curQuery,
-						't' => new \MongoDate($this->initTime),
+						'q'	=> $curInfo['query'],
 						'sl' => $link['href'],
 						'l' => parse_url($link['href'])['host']
 					];
@@ -115,24 +103,30 @@ class Searcher
 					parse_str($query, $args);
 
 					$this->links[$curEngName][] = [
-						'q' => $curQuery,
-						't' => new \MongoDate($this->initTime),
+						'q' => $curInfo['query'],
 						'sl' => $args['q'],
 						'l' => parse_url($args['q'])['host']
 					];
 				}
 			}
 
+			// add debug for fails
 			if (count($this->links[$curEngName]) == 0) {
 				$errorStack[$curEngName] = [
-					'url' 		 => $chinfo['url'],
-					'http_code'  => $chinfo['http_code'],
-					'total_time' => $chinfo['total_time'],
+					'url' => $curInfo['query'],
 				];
 			}
-
-		});
-		$this->mcurl->closeChannels();
+		}
+		foreach ($result['error'] as $error) {
+			$url = $error->getRequest()->getUrl();
+			foreach ($this->conf['engines'] as $name => $c) {
+				if(strpos($url, $name) !== false){
+					$curEngName = $name;
+					$curInfo = $this->info[$curEngName];
+				}
+			}
+			$errorStack['messages'][$curEngName] = $error->getException->getMessage();
+		}
 
 		if(!empty($errorStack)){
 			$this->monger->debug->error_stack = $errorStack;
