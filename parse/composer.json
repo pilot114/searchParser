@@ -1,0 +1,12 @@
+{
+    "require": {
+        "fire015/flintstone": "^2.1",
+        "imangazaliev/didom": "^1.13",
+        "phpoffice/phpspreadsheet": "dev-develop"
+    },
+    "autoload": {
+        "psr-4": {
+            "Parse\\": "src/"
+        }
+    }
+}
